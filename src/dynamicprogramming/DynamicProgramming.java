@@ -110,8 +110,8 @@ public abstract class DynamicProgramming {
          Cell cellToLeft, Cell cellAboveLeft, Cell cellAboveRight);
 
    protected void fillIn() {
-      for (int row = 1; row < scoreTable.length; row++) {
-         for (int col = 1; col < scoreTable[row].length; col++) {
+      for (int row = 0; row < scoreTable.length; row++) {
+         for (int col = 0; col < scoreTable[row].length; col++) {
 
             Cell currentCell = scoreTable[row][col];
             if(col == scoreTable[row].length-1){
