@@ -3,48 +3,60 @@ import dynamicprogramming.*;
 SeamCarving carver;
 ArrayList<PVector> seam;
 
-PImage img, demoImage, weightImage, scoreImage;
+PImage img, energyImage, scoreImage;
 
 void setup() {
   img = loadImage("arch_sunset.jpg");
-  demoImage = loadImage("arch_sunset.jpg");
   
-  size(img.width*4,img.height);
+  size(img.width*3,img.height);
   
   println(img.width + " " + img.height);
   
     carver = new SeamCarving(this, img);
     seam = carver.findMinSeam();
     
-    println("calculating gradient image");
-    weightImage = carver.getGradientImage();
-    println("calculating  image");
+    println("calculating energy image");
+    energyImage = carver.getGradientImage();
+    
+    println("calculating score image");
     scoreImage = carver.getScoreImage();
 
-   image(scoreImage,0,0);
+   image(scoreImage,img.width,0);
 
 }
 
 boolean newSeam = false;
 
 void draw() {
- // background(255,0,0);
-  image(weightImage,demoImage.width*2,0);
-
+  // draw a white "background"
+  // behind the final result (since it shrinks)
   fill(255);
   noStroke();
-  rect(demoImage.width,0, demoImage.width, demoImage.height);
-  image(img, demoImage.width,0);
-  stroke(255,0,0);
+  rect(energyImage.width*2, 0, energyImage.width, img.height);
+
+  image(energyImage, 0, 0);
+  image(img, energyImage.width*2, 0);
+
   if(newSeam){
-    //image(scoreImage, 0,0 );
+    pushMatrix();
+    translate(energyImage.width,0);
+    // draw a white "background"
+    // behind the energy image (since it also shrinks)
+    fill(255);
+    noStroke();
+    rect(0, 0, energyImage.width, img.height);
+    
+    // draw the score image
+    image(scoreImage, 0,0 );
+    
+    // draw the next seam to remove
+    stroke(255,0,0);
     for(PVector p : seam){
       point(p.x, p.y);
     }
-    
+    popMatrix();
     newSeam = false;
   }
-  
 }
 
 void keyPressed(){
@@ -56,8 +68,7 @@ void keyPressed(){
   seam = carver.findMinSeam();
   newSeam = true;
   
-  
-  //println("calculating score image");
-  //scoreImage = carver.getScoreImage();
+  println("calculating score image");
+  scoreImage = carver.getScoreImage();
 
 }

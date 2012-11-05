@@ -6,12 +6,12 @@ String text2 = "GCGCAATG";
 
 LongestCommonSubsequence lcs;
 
-void setup(){
-  size(500,500);
+void setup() {
+  size(500, 500);
   lcs = new LongestCommonSubsequence(text1, text2);
-  println(lcs.getLongestCommonSubsequence);
+  println(lcs.getLongestCommonSubsequence());
 }
 
-void draw(){
-
+void draw() {
 }
+

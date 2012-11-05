@@ -22,7 +22,7 @@ public class SmithWaterman extends SequenceAlignment {
 	   protected void fillInCell(Cell currentCell, Cell cellAbove, Cell cellToLeft,
 	         Cell cellAboveLeft, Cell cellAboveRight) {
 		   
-		   //if(currentCell.getRow() > 0 && !currentCell.isLeftEdge()){
+		   if(currentCell.getRow() > 0 && !currentCell.isLeftEdge()){
 	      int rowSpaceScore = cellAbove.getScore() + space;
 	      int colSpaceScore = cellToLeft.getScore() + space;
 	      int matchOrMismatchScore = cellAboveLeft.getScore();
@@ -60,7 +60,7 @@ public class SmithWaterman extends SequenceAlignment {
 	      if (currentCell.getScore() > highScoreCell.getScore()) {
 	         highScoreCell = currentCell;
 	      }
-		  // }
+		  }
 	   }
 
 	   /*

@@ -26,7 +26,7 @@ public class LongestCommonSubsequence extends DynamicProgramming {
 	   protected void fillInCell(Cell currentCell, Cell cellAbove, Cell cellToLeft,
 	         Cell cellAboveLeft, Cell cellAboveRight) {
 		   
-		  // if(currentCell.getRow() > 0 && !currentCell.isLeftEdge()){
+		   if(currentCell.getRow() > 0 && !currentCell.isLeftEdge()){
 			   int aboveScore = cellAbove.getScore();
 			   int leftScore = cellToLeft.getScore();
 			   int matchScore;
@@ -61,7 +61,7 @@ public class LongestCommonSubsequence extends DynamicProgramming {
 			   }
 			   currentCell.setScore(cellScore);
 			   currentCell.setPrevCell(cellPointer);
-		  // }
+		   }
 	   }
 
 

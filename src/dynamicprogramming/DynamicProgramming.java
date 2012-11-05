@@ -115,7 +115,6 @@ public abstract class DynamicProgramming {
 
             Cell currentCell = scoreTable[row][col];
             if(col == scoreTable[row].length-1){
-            	
             	currentCell.setRightEdge(true);
             }
             
