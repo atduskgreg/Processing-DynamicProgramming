@@ -91,16 +91,7 @@ public abstract class DynamicProgramming {
    protected void initialize() {
       for (int i = 0; i < scoreTable.length; i++) {
          for (int j = 0; j < scoreTable[i].length; j++) {
-        	Cell c = new Cell(i, j);
-            
-        	if(j == 0){
-            	c.isLeftEdge();
-            }
-            
-            if(j == scoreTable[i].length-1){
-            	c.isRightEdge();
-            }
-            
+        	Cell c = new Cell(i, j);     
             scoreTable[i][j] = c;
 
          }
@@ -121,14 +112,53 @@ public abstract class DynamicProgramming {
    protected void fillIn() {
       for (int row = 1; row < scoreTable.length; row++) {
          for (int col = 1; col < scoreTable[row].length; col++) {
+
             Cell currentCell = scoreTable[row][col];
-            Cell cellAbove = scoreTable[row - 1][col];
-            Cell cellToLeft = scoreTable[row][col - 1];
-            Cell cellAboveLeft = scoreTable[row - 1][col - 1];
-            Cell cellAboveRight = new Cell(0,0); //f-this
-            if(col < scoreTable[row].length-1){
-            	cellAboveRight = scoreTable[row - 1][col + 1];
+            if(col == scoreTable[row].length-1){
+            	
+            	currentCell.setRightEdge(true);
             }
+            
+            
+            Cell cellAbove = new Cell(0,0);
+            if(row == 0){
+            	cellAbove.setExists(false);
+            } else {
+            	cellAbove = scoreTable[row - 1][col];
+            }
+                         
+            Cell cellToLeft = new Cell(0,0);
+            if(col == 0){
+            	cellToLeft.setExists(false);
+            } else{
+            	cellToLeft = scoreTable[row][col - 1];
+            }
+            
+       
+            Cell cellAboveLeft = new Cell(0,0);
+            if(row == 0 || col == 0){
+            	cellAboveLeft.setExists(false);
+            } else{
+            	cellAboveLeft = scoreTable[row - 1][col - 1];
+            }
+            
+            Cell cellAboveRight = new Cell(0,0);
+            if(row == 0){
+            	cellAboveRight.setExists(false);
+            } 
+            else if(col < scoreTable[row].length-1){
+            	cellAboveRight = scoreTable[row - 1][col + 1];
+            	cellAboveRight.setExists(true);
+
+            } else {
+            	currentCell.setRightEdge(true); // so we know not to look at it
+            	cellAboveRight.setExists(false);
+            }
+            
+            if (row > 0 && col == scoreTable[row].length-2) {
+            	cellAboveRight.setRightEdge(true);
+            }
+            
             fillInCell(currentCell, cellAbove, cellToLeft, cellAboveLeft, cellAboveRight);
          }
       }

@@ -9,25 +9,69 @@ import processing.core.*;
 
 public class SeamCarving extends DynamicProgramming {
 	private PApplet parent;
-	private PImage img;
+	private PImage img, weightImg;
 	private float[][] weights;
+	private float[][] gradients;
 	
 	public SeamCarving(PApplet parent, PImage img){
 		super(img.width, img.height);
 
 		this.parent = parent;
 		this.img = img;
-		this.weights = pixelGradients(img);
+		
+		this.gradients = pixelGradients(img);
+		this.weightImg = getGradientImage();
+		this.weights = new float[img.height][img.width];//pixelGradients(img);	
+	}
+	
+	public PImage getGradientImage(){
+		PImage result = parent.createImage(img.width, img.height, PConstants.GRAY);
+		
+		for(int row = 0; row < img.height; row++){
+			for(int col = 0; col < img.width; col++){
+				result.pixels[col + row*result.width] = (int)gradients[row][col];
+			}
+		}
+		
+		result.updatePixels();
+		return result;
+		//return weightImg;
+	}
+	
+	public PImage getScoreImage(){
+		PImage result = parent.createImage(img.width, img.height, PConstants.RGB);
+		int[][] scores = this.getScoreTable();
+		
+		int maxScore = 0;
+		
+		for(int row = 0; row < img.height; row++){
+			for(int col = 0; col < img.width; col++){
+				result.pixels[col + row*result.width] = parent.color(parent.map(scores[row][col], 0, 1500, 0, 255));//parent.color(r,g,b);
+			
+				if(scores[row][col] > maxScore){
+					maxScore = scores[row][col];
+					
+				}
+			}
+		}
+		
+		System.out.println("max score: " + maxScore);
+		
+		result.updatePixels();
+		return result;
+		//return weightImg;
 	}
 	
 	public void setImage(PImage img){
 		this.img = img;
-		weights = pixelGradients(img);
+		this.gradients = pixelGradients(img);
+		this.weightImg = getGradientImage();
+		this.weights = new float[img.height][img.width];
 		resetTable(img.width, img.height);
 	}
 	
 	public PImage removeColumn(){
-		PImage result = parent.createImage(img.width - 1, img.height, parent.RGB);
+		PImage result = parent.createImage(img.width - 1, img.height, PConstants.RGB);
 		ArrayList<PVector> seam = findMinSeam();
 		for(PVector p : seam){
 			
@@ -37,16 +81,18 @@ public class SeamCarving extends DynamicProgramming {
 			// if there are pixels to copy to the left of the seam
 			// copy them into the new image
 			if(p.x > 0){
-				
-				
 				System.arraycopy(img.pixels, origRowBeginning, result.pixels, destRowBeginning, (int)p.x);				 
 			}
 			
 			// if there are pixels to copy to the right of the seam
 			// copy them in as well
 			if(p.x < img.width - 1){				
-				System.arraycopy(img.pixels, origRowBeginning + (int)p.x+1, result.pixels, destRowBeginning + (int)p.x, result.width - (int)p.x - 1);				 
+				System.arraycopy(img.pixels, origRowBeginning + (int)p.x+1, result.pixels, destRowBeginning + (int)p.x, result.width - (int)p.x);				 
 			}
+			
+		
+			
+			
 			
 		}
 		
@@ -58,11 +104,7 @@ public class SeamCarving extends DynamicProgramming {
 		
 		int[][] scoreTable = getScoreTable();
 
-		int[] seamIndices = new int[img.height];
-		int firstIndex = findMinSeamIndex(scoreTable);
-		
-		//seamIndices[img.height - 1] = firstIndex;
-		
+		int firstIndex = findMinSeamIndex(scoreTable);		
 		result.add(new PVector(firstIndex, img.height - 1));
 
 		
@@ -76,10 +118,8 @@ public class SeamCarving extends DynamicProgramming {
 			nextCol = findNextCol(scoreTable, row, nextCol);
 		}
 		
-		//seamIndices[0] = nextCol;
 		result.add(new PVector(nextCol, 0));
 		
-		//return seamIndices;
 		return result;
 	}
 	
@@ -89,7 +129,7 @@ public class SeamCarving extends DynamicProgramming {
 		int minIndex = 0;
 		float minValue = table[lastRow][0];
 
-		for (int j = 1; j < table[0].length; j++) {
+		for (int j = 1; j < table[lastRow].length; j++) {
 			if (table[lastRow][j] < minValue) {
 				minIndex = j;
 				minValue = table[lastRow][j];
@@ -97,6 +137,9 @@ public class SeamCarving extends DynamicProgramming {
 		}
 
 		return minIndex;
+		
+		
+		//return (int)parent.random(table[0].length - 1   );
 	}
 	
 	/**
@@ -134,8 +177,8 @@ public class SeamCarving extends DynamicProgramming {
 	 * (row,col) and returns the column
 	 */
 	private int scanThreeAbove(int[][] table, int row, int col) {
-		int minIndex = col - 1;
-		float minValue = table[row - 1][col - 1];
+		int minIndex = col;
+		float minValue = table[row - 1][col];
 
 		for (int k = 0; k < 3; k++) {
 			if (table[row - 1][col - 1 + k] < minValue) {
@@ -154,53 +197,40 @@ public class SeamCarving extends DynamicProgramming {
 	}
 
 	protected int getInitialScore(int row, int col){
-		return (int)weights[row][col];
+		return 0;
 	}
 
 	protected void fillInCell(Cell currentCell, Cell cellAbove, Cell cellToLeft, Cell cellAboveLeft, Cell cellAboveRight){	   
 
-		if(currentCell.isRightEdge()){
-			//			//		+ Math.min(table[i - 1][j], table[i - 1][j - 1]);
-			
-			currentCell.setScore(currentCell.getScore() + Math.min(cellAbove.getScore(), cellAboveLeft.getScore()));
-			 
-		} else {
+		int index = currentCell.getCol() + currentCell.getRow()*weightImg.width;
+		//parent.println(index);
 		
-			currentCell.setScore(currentCell.getScore() + Collections.min(Arrays.asList(cellAboveLeft.getScore(), cellAbove.getScore(), cellAboveRight.getScore())));
+		if (currentCell.getRow() == 0) {
+			 currentCell.setScore(parent.brightness(weightImg.pixels[index]) );//image.get(i, j);
 		}
-		//Collections.min(Arrays.asList(table[i - 1][j - 1],table[i - 1][j], table[i - 1][j + 1]));
-		
-		//return (int)(weights[col][row] + Collections.min(Arrays.asList(weights[col-1][row-1], weights[col-1][row], weights[col-1][row+1])));
 
-		
 		// checks for single col image
-		/*if (row == 0 && row == weights[0].length - 1) {
-			return (int)(weights[col][row] + weights[col - 1][row]);
-			//	return image.get(i, j) + table[i - 1][j];
+		else if (currentCell.isLeftEdge() && currentCell.isRightEdge()) {
+			System.out.println("NEVER!");
+			currentCell.setScore(parent.brightness(weightImg.pixels[index]) +  cellAbove.getScore()); 
 		}
 
 		// if on the left edge does not consider going to the left
-		if (row == 0) {
-			//return image.get(i, j)
-			//		+ Math.min(table[i - 1][j], table[i - 1][j + 1]);
-			
-			return (int)(weights[col][row] + Math.min(weights[col-1][row], weights[col-1][row+1]));
+		else if (currentCell.isLeftEdge()) {
+			currentCell.setScore(parent.brightness(weightImg.pixels[index])
+				+ Math.min(cellAbove.getScore(), cellAboveRight.getScore()));
 		}
 
 		// if on the right edge does not consider going to the right
-		if (row == weights[0].length - 1) {
-			//return image.get(i, j)
-			//		+ Math.min(table[i - 1][j], table[i - 1][j - 1]);
-			return (int)(weights[col][row] + Math.min(weights[col-1][row], weights[col-1][row-1]));
+		else if (currentCell.isRightEdge()) {
+			currentCell.setScore(parent.brightness(weightImg.pixels[index]) + Math.min(cellAbove.getScore(), cellAboveLeft.getScore()));
 		}
-
-		// otherwise looks at the left, center, and right possibilities as mins
-		return (int)(weights[col][row] + Collections.min(Arrays.asList(weights[col-1][row-1], weights[col-1][row], weights[col-1][row+1])));
-		//return image.get(i, j)
-		//		+ Collections.min(Arrays.asList(table[i - 1][j - 1],
-		//				table[i - 1][j], table[i - 1][j + 1]));
-		 */
 		
+		else {
+		// otherwise looks at the left, center, and right possibilities as mins
+			currentCell.setScore(parent.brightness(weightImg.pixels[index]) + Collections.min(Arrays.asList(cellAboveLeft.getScore(), cellAbove.getScore(), cellAboveRight.getScore())));
+		}
+	
 	}
 	
 	/* END DynamicProgramming methods */
@@ -216,6 +246,7 @@ public class SeamCarving extends DynamicProgramming {
 		for (int y = 0; y < original.height; y++) {
 		    for (int x = 0; x < original.width; x++) {
 		      result[y][x] = parent.color(pixelGradient(original, x, y));
+		      
 		    }
 		}
 		
@@ -244,13 +275,7 @@ public class SeamCarving extends DynamicProgramming {
 		    return (float) Math.sqrt(p1 + p2);
 		}
 
-		if (x == img.width - 1) {
-		    p1 = (float) Math.pow(point, 2);
-
-
-		    p2 = (float) Math.pow((parent.brightness(img.pixels[x+(y+1)*img.width]) - point), 2);
-		    return (float) Math.sqrt(p1 + p2);
-		 }
+	
 
 
 		 p1 = (float) Math.pow((parent.brightness(img.pixels[x+1 + y*img.width]) - point), 2);

@@ -12,25 +12,29 @@ public class Cell {
 	   private int score;
 	   private int row;
 	   private int col;
-	   
-	   private boolean isLeftEdge;
 	   private boolean isRightEdge;
+	   private boolean exists;
 	   
 	   public Cell(int row, int col) {
 	      this.row = row;
 	      this.col = col;
+	      this.exists = true;
+	   }
+	   
+	   public boolean doesExist(){
+		   return exists;
+	   }
+	   
+	   public void setExists(boolean b){
+		   this.exists = b;
 	   }
 	   
 	   public boolean isLeftEdge(){
-		   return isLeftEdge;
+		   return col == 0;
 	   }
 	   
 	   public boolean isRightEdge(){
 		   return isRightEdge;
-	   }
-	   
-	   public void setLeftEdge(boolean e){
-		   isLeftEdge = e;
 	   }
 	   
 	   public void setRightEdge(boolean e){
@@ -44,6 +48,11 @@ public class Cell {
 	    */
 	   public void setScore(int score) {
 	      this.score = score;
+	   }
+	   
+	   public void setScore(float score){
+		   this.score = (int)score;
+		   
 	   }
 
 	   /**
